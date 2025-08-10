@@ -1,0 +1,70 @@
+"""
+The program is designed to generate sample data for card transactions and write data to csv file.
+"""
+
+import csv
+import random
+from datetime import datetime, timedelta
+
+# Lists of data for generating records
+first_names = ["John", "Jane", "Alice", "Bob", "Charlie", "Eva", "David", "Fiona", "George", "Hannah"]
+last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
+countries = ["US", "PL", "DE", "FR", "UK", "CA", "AU", "JE", "IT", "ES"]
+card_types = ["credit", "debit", "prepaid"]
+card_issuers = ["Visa", "MasterCard"]
+categories = ["restaurant", "transportation", "store", "entertainment", "groceries", "health"]
+transaction_types = ["chip", "ecomm", "atm", "contactless", "moto"]
+transaction_statuses = ["approved", "declined", "pending", "refunded"]
+transaction_channels = ["in-store", "online", "mobile", "phone"]
+device_types = ["POS terminal", "smartphone", "tablet", "ATM"]
+
+# Function to generate a random date
+def random_date(start_date, end_date):
+    delta = end_date - start_date
+    random_days = random.randint(0, delta.days)
+    return start_date + timedelta(days=random_days)
+
+# Data generation
+start_date = datetime(2023, 1, 1)
+end_date = datetime(2025, 12, 31)
+
+with open('transactions.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow([
+        "id", "transaction_date", "transaction_time", "amount", "currency_code", "transaction_type", "category",
+        "merchant_code", "merchant_name", "merchant_country", "card_type", "card_number",
+        "card_holder_first_name", "card_holder_last_name", "card_expiry_date", "card_issuer", "transaction_status",
+        "transaction_channel", "device_type", "ip_address", "fraud_flag", "chargeback_flag", "transaction_reference", "customer_id"
+    ])
+    for i in range(100000):
+        id = random.randint(1000000000000000000, 9999999999999999999)
+        transaction_date = random_date(start_date, end_date).strftime('%Y-%m-%d')
+        transaction_time = f"{random.randint(0, 23):02}:{random.randint(0, 59):02}:{random.randint(0, 59):02}"
+        amount = round(random.uniform(10.0, 1000.0), 2)
+        currency_code = random.choice([840, 985, 978, 826])
+        transaction_type = random.choice(transaction_types)
+        category = random.choice(categories)
+        merchant_code = random.randint(1000, 9999)
+        merchant_name = f"Merchant {merchant_code}"
+        merchant_country = random.choice(countries)
+        card_type = random.choice(card_types)
+        card_number = f"{random.randint(4000,5999)}********{random.randint(1000, 9999)}"
+        card_holder_first_name = random.choice(first_names)
+        card_holder_last_name = random.choice(last_names)
+        card_expiry_date = f"{random.randint(2024, 2026)}-{random.randint(1, 12):02}"
+        card_issuer = random.choice(card_issuers)
+        transaction_status = random.choice(transaction_statuses)
+        transaction_channel = random.choice(transaction_channels)
+        device_type = random.choice(device_types)
+        ip_address = f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}" if transaction_channel == "online" else None
+        fraud_flag = random.choice([True, False])
+        chargeback_flag = random.choice([True, False])
+        transaction_reference = f"TX{random.randint(100000000, 999999999)}"
+        customer_id = f"CUST{random.randint(10000, 99999)}"
+
+        writer.writerow([
+            id, transaction_date, transaction_time, amount, currency_code, transaction_type, category,
+            merchant_code, merchant_name, merchant_country, card_type, card_number,
+            card_holder_first_name, card_holder_last_name, card_expiry_date, card_issuer, transaction_status,
+            transaction_channel, device_type, ip_address, fraud_flag, chargeback_flag, transaction_reference, customer_id
+        ])
