@@ -1,6 +1,6 @@
 # python_project
 
-1. # Python - Card Transacion Generator
+# 1. Python - Card Transacion Generator
 
 -- Polish version:
 
