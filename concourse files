@@ -1,0 +1,256 @@
+import sys
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QLineEdit, QComboBox, QPushButton, QGraphicsView, QGraphicsScene
+)
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QBrush
+from PyQt5.QtCore import Qt
+import folium
+import os
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Przykładowe dane paczkomatów
+paczkomaty = [
+    {"name": "KRK001", "latitude": 50.06465, "longitude": 19.94498, "address": "Rynek Główny 1, Kraków", "id": "KRK001"},
+    {"name": "KRK002", "latitude": 50.05925, "longitude": 19.93874, "address": "ul. Floriańska 12, Kraków", "id": "KRK002"},
+    {"name": "KRK003", "latitude": 50.06143, "longitude": 19.93658, "address": "ul. Grodzka 10, Kraków", "id": "KRK003"}
+]
+
+def generuj_mapke():
+    mapa = folium.Map(location=[50.06465, 19.94498], zoom_start=14)
+    for punkt in paczkomaty:
+        folium.Marker(
+            location=[punkt["latitude"], punkt["longitude"]],
+            popup=f"<b>{punkt['name']}</b><br>{punkt['address']}",
+            tooltip=punkt["name"]
+        ).add_to(mapa)
+    mapa.save("mapa_paczkomatow.html")
+
+def renderuj_mape():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    driver = webdriver.Chrome(options=chrome_options)
+
+    driver.get("file://" + os.path.abspath("mapa_paczkomatow.html"))
+    time.sleep(2)
+    driver.set_window_size(400, 400)
+    driver.save_screenshot("mapa_paczkomatow.png")
+    driver.quit()
+
+
+# Klasa strony końcowej (sukces/anulowanie)
+class FinalPage(QWidget):
+    def __init__(self, message, color, symbol, email="", telefon="", paczkomat="", show_order_button=False, show_exit_button=False):
+        super().__init__()
+        self.setWindowTitle("Status")
+        self.setGeometry(100, 100, 600, 400)
+        self.email = email
+        self.telefon = telefon
+        self.paczkomat = paczkomat
+        self.show_order_button = show_order_button
+        self.show_exit_button = show_exit_button
+        self.setup_ui(message, color, symbol)
+
+    def setup_ui(self, message, color, symbol):
+        layout = QVBoxLayout()
+
+        # Ikona (zielony ptaszek lub czerwony krzyżyk)
+        icon_label = QLabel(self)
+        icon_label.setAlignment(Qt.AlignCenter)
+        icon_pixmap = self.generate_icon(color, symbol)
+        icon_label.setPixmap(icon_pixmap)
+        layout.addWidget(icon_label)
+
+        # Wiadomość
+        message_label = QLabel(message)
+        message_label.setAlignment(Qt.AlignCenter)
+        message_label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(message_label)
+
+        # Przycisk "Zamów kartę" (tylko w oknie sukcesu)
+        if self.show_order_button:
+            order_button = QPushButton("Zamów kartę")
+            order_button.setStyleSheet("font-size: 16px; height: 40px; background-color: darkred; color: white;")
+            order_button.clicked.connect(self.zamow_karte)
+            layout.addWidget(order_button)
+
+        # Przycisk "Zakończ" (tylko w oknie anulowania)
+        if self.show_exit_button:
+            exit_button = QPushButton("Zakończ")
+            exit_button.setStyleSheet("font-size: 16px; height: 40px; background-color: darkred; color: white;")
+            exit_button.clicked.connect(self.zakoncz)
+            layout.addWidget(exit_button)
+
+        self.setLayout(layout)
+
+    def generate_icon(self, color, symbol):
+        pixmap = QPixmap(100, 100)
+        pixmap.fill(Qt.transparent)
+
+        painter = QPainter(pixmap)
+        pen = QPen(Qt.NoPen)
+        brush = QBrush(Qt.red if color == "red" else Qt.green)
+        painter.setBrush(brush)
+
+        # Rysowanie kółka
+        painter.drawEllipse(0, 0, 100, 100)
+
+        # Rysowanie symbolu
+        pen = QPen(Qt.white, 8)
+        painter.setPen(pen)
+
+        if symbol == "checkmark":  # Ptaszek
+            painter.drawLine(25, 50, 45, 70)
+            painter.drawLine(45, 70, 75, 30)
+        elif symbol == "cross":  # Krzyżyk
+            painter.drawLine(25, 25, 75, 75)
+            painter.drawLine(75, 25, 25, 75)
+
+        painter.end()
+        return pixmap
+
+    def zamow_karte(self):
+        print(f"Zamówienie karty zostało złożone.")
+        print(f"Email: {self.email}")
+        print(f"Nr telefonu: {self.telefon}")
+        print(f"Nr Paczkomatu: {self.paczkomat}")
+        QApplication.instance().quit()  # Zamyka aplikację po kliknięciu
+
+    def zakoncz(self):
+        print("Aplikacja została zakończona.")
+        QApplication.instance().quit()  # Zamyka aplikację po kliknięciu
+
+
+# Klasa MainWindow (główne okno)
+class MainWindow(QWidget):
+    def __init__(self, window_width=500, window_height=600, input_box_width=400): # Tutaj zwiekszasz i zmniejszasz okno synu
+        super().__init__()
+        self.window_width = window_width
+        self.window_height = window_height
+        self.input_box_width = input_box_width
+        self.setWindowTitle("Zamów Kartę")
+        self.setGeometry(50, 50, self.window_width, self.window_height)
+        self.setup_ui()
+
+    def setup_ui(self):
+        layout = QVBoxLayout()
+
+        # Opcja dostawy
+        row1 = QHBoxLayout()
+        self.opcja_combo = QComboBox()
+        self.opcja_combo.addItems(["Paczkomat", ""])
+        row1.addWidget(self.opcja_combo)
+        layout.addLayout(row1)
+
+        # Email
+        row2 = QHBoxLayout()
+        row2.addWidget(QLabel("Email:"))
+        self.email_input = QLineEdit()
+        self.email_input.setPlaceholderText("Wprowadź swój email")
+        self.email_input.setText("jan.kowalski@domena.pl")
+        row2.addWidget(self.email_input)
+        layout.addLayout(row2)
+
+        # Nr telefonu
+        row3 = QHBoxLayout()
+        row3.addWidget(QLabel("Nr telefonu:"))
+        self.telefon_input = QLineEdit()
+        self.telefon_input.setPlaceholderText("Wprowadź numer telefonu")
+        self.telefon_input.setText("+48508312299")
+        row3.addWidget(self.telefon_input)
+        layout.addLayout(row3)
+
+        # Nr Paczkomatu
+        row4 = QHBoxLayout()
+        row4.addWidget(QLabel("Nr Paczkomatu:"))
+        self.paczkomat_input = QLineEdit()
+        self.paczkomat_input.setPlaceholderText("Wybierz Paczkomat InPost")
+        self.paczkomat_input.setText("KRK001") # Domyślna wartość
+        row4.addWidget(self.paczkomat_input)
+        layout.addLayout(row4)
+
+        # Informacja o koszcie przesyłki
+        koszt_label = QLabel("Koszt przesyłki wynosi xx.xx zł")
+        koszt_label.setStyleSheet("font-size: 11px; color: lightgreay;")
+        layout.addWidget(koszt_label)
+
+        # Dodanie odstępu jako pusty QLabel
+        odstep = QLabel("")
+        odstep.setFixedHeight(20)  # Wysokość 2 linie
+        layout.addWidget(odstep)
+
+        # Tytuł nad mapą
+        mapa_title = QLabel("Poniżej znajduje się mapa paczkomatów InPost")
+        mapa_title.setAlignment(Qt.AlignCenter)
+        mapa_title.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(mapa_title)
+
+        # Dodanie odstępu jako pusty QLabel
+        odstep = QLabel("")
+        odstep.setFixedHeight(10)  # Wysokość jedna linia
+        layout.addWidget(odstep)
+
+        # Mapa
+        generuj_mapke()
+        renderuj_mape()
+        self.scene = QGraphicsScene()
+        self.map_view = QGraphicsView(self.scene)
+        pixmap = QPixmap("mapa_paczkomatow.png")
+        self.map_item = self.scene.addPixmap(pixmap)
+        layout.addWidget(self.map_view)
+
+        # Przycisk Anuluj i Dalej (wyśrodkowane, "Anuluj" nad "Dalej")
+        button_layout = QVBoxLayout()
+
+        # Przycisk Dalej
+        dalej_button = QPushButton("Dalej")
+        dalej_button.setStyleSheet("font-size: 16px; height: 50px; background-color: darkred; color: white;")
+        dalej_button.setFixedWidth(300) # dlugosc przycisku
+        dalej_button.clicked.connect(self.przejdz_na_strone_sukcesu)
+        button_layout.addWidget(dalej_button, alignment=Qt.AlignCenter)
+
+        # Przycisk Anuluj
+        anuluj_button = QPushButton("Anuluj")
+        anuluj_button.setStyleSheet("font-size: 16px; height: 50px; background-color: grey; color: white;")
+        anuluj_button.setFixedWidth(300) # dlugosc przycisku
+        anuluj_button.clicked.connect(self.przejdz_na_strone_anulowania)
+        button_layout.addWidget(anuluj_button, alignment=Qt.AlignCenter)
+
+
+
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
+
+
+    def przejdz_na_strone_sukcesu(self):
+        # Przejdź na stronę sukcesu
+        email = self.email_input.text()
+        telefon = self.telefon_input.text()
+        paczkomat = self.paczkomat_input.text()
+        self.close()  # Zamknij główne okno
+        self.success_window = FinalPage(
+            "Dziękujemy za uzupełnienie wniosku",
+            "green", "checkmark", email, telefon, paczkomat, show_order_button=True, show_exit_button=False
+        )
+        self.success_window.show()
+
+
+    def przejdz_na_strone_anulowania(self):
+        # Przejdź na stronę anulowania
+        self.close()  # Zamknij główne okno
+        self.cancel_window = FinalPage(
+            "Dyspozycja zamówienia karty została Anulowana", "red", "cross", show_order_button=False, show_exit_button=True
+        )
+        self.cancel_window.show()
+
+
+# Uruchomienie aplikacji
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
