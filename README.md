@@ -23,4 +23,26 @@ The Titanic data analysis project involves examining information about passenger
 Projekt analizy danych Titanica polega na zbadaniu informacji o pasażerach słynnego statku, który zatonął w 1912 roku. Analiza obejmuje m.in. wiek, płeć, klasę biletu i port zaokrętowania, aby odkryć czynniki wpływające na przeżycie. Często stosuje się wizualizacje danych oraz modele uczenia maszynowego, by przewidzieć prawdopodobieństwo uratowania się pasażera.
 
 
+## 3. Python - Card Ordering Application for Pickup Points
+
+### 📊 English version:
+
+A simple application written in Python, designed to allow users to order a card (e.g., loyalty, payment, or other type) to a selected parcel pickup point.
+
+Example Workflow:
+1.	The user launches the application.
+2.	Enters their email address and phone number
+3.	Selects a pickup point from the available locations.
+4.	Receives a success confirmation screen or ❌ an error message.
+
+
+### 📊 Polish version:
+
+Aplikacja napisana w języku Python, której celem jest umożliwienie użytkownikowi zamówienia karty (np. lojalnościowej, płatniczej lub innej) do wybranego punktu odbioru przesyłek.
+
+Przykładowy scenariusz działania:
+1.	Użytkownik uruchamia aplikację.
+2.	Wprowadza swój adres e-mail i nr telefonu
+3.	Wybiera punkt odbioru z dostępnych lokalizacji.
+4.	Otrzymuje ekran potwierdzający sukces zamówienia lub ❌ komunikat o błędzie.
 
