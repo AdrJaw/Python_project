@@ -27,7 +27,7 @@ Projekt analizy danych Titanica polega na zbadaniu informacji o pasażerach sły
 
 ### 🇬🇧
 
-A simple application written in Python, designed to allow users to order a card (e.g., loyalty, payment, or other type) to a selected parcel pickup point.
+A application written in Python, designed to allow users to order a card (e.g., loyalty, payment, or other type) to a selected parcel pickup point.
 
 Example Workflow:
 1.	The user launches the application.
